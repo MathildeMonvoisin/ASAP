@@ -5,7 +5,7 @@ compile with
 ``` gcc -O3  -Wall  -o asap oldfns.c asap.c asap_common.c  asap_core.c gdtosvg.c  draw.c -lm``` 
 
 run with 
-``` ./asap``` 
+``` ./asap [location of you fasta file] ``` 
 
 
 ASAP command line: Brief Install and How to Description
