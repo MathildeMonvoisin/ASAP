@@ -44,6 +44,7 @@
 #include <errno.h> /* errno */
 #include "asap.h"
 #include "oldfns.h"
+#include <stdbool.h>
 
 #define COMMON_SYMBOL 1
 
@@ -421,7 +422,7 @@ int ReadFastaSequence(FILE *f, struct FastaSeq *laseq, int *lenseq)
 		// if (c != '\n' && c != '\r' && c != '\t' && c != ' ')
 		if (c != '\n' && c != '\r' && c != '\t' && c != ' ' && c != '?')
 		{
-				
+
 			if (strchr(nucs, toupper(c)) == NULL)
 				html_error(60); /*weird symbol found*/
 
@@ -847,9 +848,8 @@ void distancesimple(struct FastaSeq *mesSeqs, int l, struct DistanceMatrix my_ma
 			if (ggg < COMMON_SYMBOL)
 			{
 				fprintf(fres, "<<BR><BR><BR><H3>Sequence %s and %s have %d common site. . Bye <BR>", my_mat.names[a], my_mat.names[b], ggg);
-				// replace by -1
-				v = 2147483647;
-				// myclose(asap_param);
+
+				v = 2147483647; // max int value
 			}
 
 			for (i = 0; i < l; i++)
@@ -861,7 +861,73 @@ void distancesimple(struct FastaSeq *mesSeqs, int l, struct DistanceMatrix my_ma
 				if (((*(s1 + i)) == '-') || ((*(s2 + i)) == '-') || ((*(s1 + i)) == 'N') || ((*(s2 + i)) == 'N'))
 					ncor++;
 			}
-			v = ((v) / (double)(l - ncor));
+
+			// here : check if any insertions ?
+			bool in_insertion_1 = false;
+			bool in_insertion_2 = false;
+			bool had_one_valid_nucleotid_1 = false;
+			bool had_one_valid_nucleotid_2 = false;
+
+			for (i = 0; i < l; i++)
+			{
+				c1 = toupper(*(s1 + i));
+				c2 = toupper(*(s2 + i));
+
+				fprintf(stderr, "(avant) v \n");
+				fprintf(stderr, "(avant)  %.3e  \n", v);
+
+				if (c1 != '-')
+				{
+					had_one_valid_nucleotid_1 = true;
+				}
+
+				if (c2 != '-')
+				{
+					had_one_valid_nucleotid_2 = true;
+				}
+
+				// begin insertion seq 1
+				if (had_one_valid_nucleotid_1 && (c1 == '-') && !(in_insertion_1) && (c2 != '-'))
+				{
+					in_insertion_1 = true;
+					fprintf(stderr, "in_insertion_1 becomes true \n");
+				}
+
+				// end insertion seq 1
+				if ((c1 != '-') && in_insertion_1 && (i < l - 1)) // Count insertion if not at the end, and not if c2 also is a "-"
+				{
+					in_insertion_1 = false;
+
+					v += 1;
+					fprintf(stderr, "v += 1 \n");
+
+					fprintf(stderr, "in_insertion_1 becomes false \n");
+				}
+
+				// begin insertion seq 2
+				if (had_one_valid_nucleotid_2 && (c2 == '-') && !(in_insertion_2) && (c1 != '-')) // Count insertion if not at the beginning
+				{
+					in_insertion_2 = true;
+					fprintf(stderr, "in_insertion_2 becomes true \n");
+				}
+
+				// end insertion seq 2
+				if ((c2 != '-') && in_insertion_2 && (i < l - 1))
+				{
+					in_insertion_2 = false;
+
+					v += 1;
+					fprintf(stderr, "v += 1 \n");
+
+					fprintf(stderr, "in_insertion_2 becomes false \n");
+				}
+
+				fprintf(stderr, "(apres) v \n");
+				fprintf(stderr, "(apres)  %.3e  \n", v);
+
+				v = ((v) / (double)(l - ncor)); // TODO : à remettre !
+			}
+
 			if (isnan(v))
 				v = 1.0;
 			my_mat.dist[a][b] = my_mat.dist[b][a] = v;
@@ -904,7 +970,7 @@ void distanceJC69(struct FastaSeq *mesSeqs, int l, struct DistanceMatrix mymat, 
 				// replace by -1/inf?
 				// v = -1;
 				v = 2147483647; // max positive value
-				// myclose(asap_param);
+								// myclose(asap_param);
 			}
 
 			for (i = 0; i < l; i++)
@@ -1064,11 +1130,16 @@ void distanceK80(struct FastaSeq *mesSeqs, int l, struct DistanceMatrix my_mat, 
 			if (ggg < COMMON_SYMBOL)
 			{
 				fprintf(fres, "<BR><BR><BR><H3>Sequence %s and %s have %d common site. Distance can't be computed. Bye <BR>", my_mat.names[i], my_mat.names[j], ggg);
-				myclose(asap_param);
+				// myclose(asap_param);
+
+				h = 2147483647; // max positive value
 			}
-			transition_transversion_sequences(mesSeqs[i].seq, mesSeqs[j].seq, l, &tsi, &tsv);
-			del = del_sequences(mesSeqs[i].seq, mesSeqs[j].seq, l);
-			h = find_ML_t_given_R(my_mat.ratio_ts_tv, l - del, tsv, tsi);
+			else
+			{
+				transition_transversion_sequences(mesSeqs[i].seq, mesSeqs[j].seq, l, &tsi, &tsv);
+				del = del_sequences(mesSeqs[i].seq, mesSeqs[j].seq, l);
+				h = find_ML_t_given_R(my_mat.ratio_ts_tv, l - del, tsv, tsi);
+			}
 			// if (isnan(h)) h=1.0; //SOFIZ PABON
 			my_mat.dist[i][j] = my_mat.dist[j][i] = h;
 			if (my_mat.dist[i][j] == -0) // happens sometimes
@@ -1125,48 +1196,53 @@ void distanceTN93(struct FastaSeq *mesSeqs, int l, struct DistanceMatrix my_mat,
 			if (ggg < COMMON_SYMBOL)
 			{
 				fprintf(fres, "<BR><BR><BR><H3>Sequence %s and %s have %d common site. Distance can't be computed. Bye <BR>", my_mat.names[a], my_mat.names[b], ggg);
-				myclose(asap_param);
+				// myclose(asap_param);
+				v = 2147483647; // max positive value
 			}
-			newl = 0;
-			v = 0;
-			for (i = 0; i < 5; i++)
-				f[i] = 0;
-			for (i = 0; i < l; i++)
+			else
 			{
-				c1 = toupper(*(s1 + i));
-				c2 = toupper(*(s2 + i));
-				if (strchr(nuc, c1) && strchr(nuc, c2))
-				{
-					f[(int)(strchr(nuc, c1) - nuc)]++;
-					f[(int)(strchr(nuc, c2) - nuc)]++;
-				}
 
-				if (compare_DNA(c1, c2) == 0)
-				{
-					v++;
-					if ((c1 == 'A' && c2 == 'G') || (c2 == 'A' && c1 == 'G'))
-						transitionsag++;
-					else if ((c1 == 'C' && c2 == 'T') || (c2 == 'C' && c1 == 'T'))
-						transitionsct++;
-				}
-			}
-
-			transversions = v - transitions;
-			q = transversions / (double)newl;
-			// p = transitions / (double)newl; not used?????????
-			p1 = transitionsag / (double)newl;
-			p2 = transitionsct / (double)newl;
-			ga = f[0] / (2.0 * newl);
-			gc = f[1] / (2.0 * newl);
-			gg = f[2] / (2.0 * newl);
-			gt = f[3] / (2.0 * newl);
-			gr = ga + gg;
-			gy = gc + gt;
-			v = ((-2 * ga * gg / gr) * log(1.0 - ((gr / (2.0 * ga * gg)) * p1) - ((1 / (2 * gr)) * q))) -
-				(((2 * gt * gc) / gy) * log(1.0 - ((gy / (2.0 * gt * gc)) * p2) - ((1 / (2 * gy)) * q))) -
-				((2.0 * ((gr * gy) - ((ga * gg * gy) / gr) - ((gt * gc * gr) / gy))) * log(1.0 - ((1.0 / (2.0 * gr * gy)) * q)));
-			if (v == -0)
+				newl = 0;
 				v = 0;
+				for (i = 0; i < 5; i++)
+					f[i] = 0;
+				for (i = 0; i < l; i++)
+				{
+					c1 = toupper(*(s1 + i));
+					c2 = toupper(*(s2 + i));
+					if (strchr(nuc, c1) && strchr(nuc, c2))
+					{
+						f[(int)(strchr(nuc, c1) - nuc)]++;
+						f[(int)(strchr(nuc, c2) - nuc)]++;
+					}
+
+					if (compare_DNA(c1, c2) == 0)
+					{
+						v++;
+						if ((c1 == 'A' && c2 == 'G') || (c2 == 'A' && c1 == 'G'))
+							transitionsag++;
+						else if ((c1 == 'C' && c2 == 'T') || (c2 == 'C' && c1 == 'T'))
+							transitionsct++;
+					}
+				}
+
+				transversions = v - transitions;
+				q = transversions / (double)newl;
+				// p = transitions / (double)newl; not used?????????
+				p1 = transitionsag / (double)newl;
+				p2 = transitionsct / (double)newl;
+				ga = f[0] / (2.0 * newl);
+				gc = f[1] / (2.0 * newl);
+				gg = f[2] / (2.0 * newl);
+				gt = f[3] / (2.0 * newl);
+				gr = ga + gg;
+				gy = gc + gt;
+				v = ((-2 * ga * gg / gr) * log(1.0 - ((gr / (2.0 * ga * gg)) * p1) - ((1 / (2 * gr)) * q))) -
+					(((2 * gt * gc) / gy) * log(1.0 - ((gy / (2.0 * gt * gc)) * p2) - ((1 / (2 * gy)) * q))) -
+					((2.0 * ((gr * gy) - ((ga * gg * gy) / gr) - ((gt * gc * gr) / gy))) * log(1.0 - ((1.0 / (2.0 * gr * gy)) * q)));
+				if (v == -0)
+					v = 0;
+			}
 			my_mat.dist[a][b] = my_mat.dist[b][a] = v;
 		}
 	}
@@ -1181,7 +1257,7 @@ struct DistanceMatrix GetDistMat(int nseq, struct FastaSeq *mesSeqs, int method,
 	FILE *fres = asap_param.fres;
 	struct DistanceMatrix my_mat;																  /* store distance matrix, names and matrix size */
 	void (*distance)(struct FastaSeq *, int, struct DistanceMatrix, Parameter asap_param) = NULL; /* pointeur de fonction */
-	
+
 	int a;
 	int length;
 

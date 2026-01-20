@@ -72,6 +72,12 @@
 #endif
 #define NBCHARMALLOC 256
 
+typedef enum
+{
+	MODE_BASIC,
+	MODE_ACCOUNT_FOR_INDEL
+} IndelDistanceMode;
+
 void usage(char *arg)
 {
 	fprintf(stderr, "/*\n\tAgglomerate Specimens by Automatic Processing\n*/\n");
@@ -90,6 +96,7 @@ void usage(char *arg)
 	\t-l #	: original length of seqs if a distance matrix was provided (default value 600)\n\
 	\t-t #  : transition/transversion (for Kimura) default:2\n\
 	\t-n #  : nbr of best scores to be kept (default 10))\n\
+	\t-w : count INDEL\n\
 	\t-x #  : seed value\n");
 
 	/*	\t-p #  : slope ponderation for asap score calculation: default is 0.5\n\*/
@@ -689,6 +696,8 @@ int main(int argc, char **argv)
 	char c;
 	char thedate[80];
 
+	IndelDistanceMode indel_distance_mode = MODE_BASIC;
+
 	short int imethode = 1, fmeg = 0, withallfiles = 0; // imethode1 for Jukes
 	int last_node;
 	// int fmeg2=0;
@@ -747,7 +756,7 @@ int main(int argc, char **argv)
 	/*
 		parse options
 	*/
-	while ((c = getopt(argc, argv, "o:l:n:p:d:t:amuhr:b:x:")) != -1)
+	while ((c = getopt(argc, argv, "o:l:n:p:w:d:t:amuhr:b:x:")) != -1)
 	{
 
 		switch (c)
@@ -817,6 +826,10 @@ int main(int argc, char **argv)
 
 		case 'u':
 			asap_param.onlyspart = 1; /*if present One spart fiel only is outputedCVS*/
+			break;
+
+		case 'w': // ne fonctionne pas pour l'instant
+			indel_distance_mode = MODE_ACCOUNT_FOR_INDEL;
 			break;
 
 		default:
@@ -904,7 +917,6 @@ int main(int argc, char **argv)
 	rewind(f_in);
 	if (c == '>')
 	{
-		
 		fprintf(stderr, "> asap is reading the fasta file and computing the distance matrix\n");
 
 		// mat = compute_dis(f_in, imethode, ts_tv, &(asap_param.lenSeq),"",stdout);
