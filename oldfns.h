@@ -5,6 +5,8 @@ void print_distmat(  struct DistanceMatrix distmat  );
 void html_error(int n);
 void f_html_error(int nb, char *ledir,FILE *f);
 
+double count_insertions(double v, int l, char *s1, char *s2);
+
 void distancesimple(struct FastaSeq *mesSeqs,int l,struct  DistanceMatrix  my_mat, Parameter asap_param);
 void distanceJC69 (struct FastaSeq *mesSeqs, int l, struct  DistanceMatrix  mymat, Parameter asap_param);
 void distanceK80 (struct FastaSeq *mesSeqs,int l,struct  DistanceMatrix  my_mat, Parameter asap_param);
