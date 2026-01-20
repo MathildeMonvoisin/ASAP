@@ -820,12 +820,71 @@ struct DistanceMatrix compute_dis(FILE *f, int method, float ts_tv, int *len_seq
 	return my_mat;
 }
 
+double count_insertions(double v, int l, char *s1, char *s2)
+{
+	int i;
+	char c1, c2;
+
+	// here : check if any insertions ?
+	bool in_insertion_1 = false;
+	bool in_insertion_2 = false;
+	bool had_one_valid_nucleotid_1 = false;
+	bool had_one_valid_nucleotid_2 = false;
+
+	for (i = 0; i < l; i++)
+	{
+		c1 = toupper(*(s1 + i));
+		c2 = toupper(*(s2 + i));
+
+		fprintf(stderr, "(avant) v \n");
+		fprintf(stderr, "(avant)  %.3e  \n", v);
+
+		if (c1 != '-')
+		{
+			had_one_valid_nucleotid_1 = true;
+		}
+
+		if (c2 != '-')
+		{
+			had_one_valid_nucleotid_2 = true;
+		}
+
+		// begin insertion seq 1
+		if (had_one_valid_nucleotid_1 && (c1 == '-') && !(in_insertion_1) && (c2 != '-'))
+		{
+			in_insertion_1 = true;
+		}
+
+		// end insertion seq 1
+		if ((c1 != '-') && in_insertion_1 && (i < l - 1)) // Count insertion if not at the end, and not if c2 also is a "-"
+		{
+			in_insertion_1 = false;
+			v += 1;
+		}
+
+		// begin insertion seq 2
+		if (had_one_valid_nucleotid_2 && (c2 == '-') && !(in_insertion_2) && (c1 != '-')) // Count insertion if not at the beginning
+		{
+			in_insertion_2 = true;
+		}
+
+		// end insertion seq 2
+		if ((c2 != '-') && in_insertion_2 && (i < l - 1))
+		{
+			in_insertion_2 = false;
+			v += 1;
+		}
+
+		return v;
+	}
+}
+
 /*compute a very tricky distance for 2 sequences*/
 void distancesimple(struct FastaSeq *mesSeqs, int l, struct DistanceMatrix my_mat, Parameter asap_param)
 
 {
 	char *s1, *s2, c1, c2;
-	;
+
 	double v = 0;
 	int i, a, b, ncor = 0;
 	int nseq = my_mat.n;
@@ -862,77 +921,66 @@ void distancesimple(struct FastaSeq *mesSeqs, int l, struct DistanceMatrix my_ma
 					ncor++;
 			}
 
-			// here : check if any insertions ?
-			bool in_insertion_1 = false;
-			bool in_insertion_2 = false;
-			bool had_one_valid_nucleotid_1 = false;
-			bool had_one_valid_nucleotid_2 = false;
+			v = count_insertions(v, l, s1, s2);
 
-			for (i = 0; i < l; i++)
-			{
-				c1 = toupper(*(s1 + i));
-				c2 = toupper(*(s2 + i));
+			// // here : check if any insertions ?
+			// bool in_insertion_1 = false;
+			// bool in_insertion_2 = false;
+			// bool had_one_valid_nucleotid_1 = false;
+			// bool had_one_valid_nucleotid_2 = false;
 
-				fprintf(stderr, "(avant) v \n");
-				fprintf(stderr, "(avant)  %.3e  \n", v);
+			// for (i = 0; i < l; i++)
+			// {
+			// 	c1 = toupper(*(s1 + i));
+			// 	c2 = toupper(*(s2 + i));
 
-				if (c1 != '-')
-				{
-					had_one_valid_nucleotid_1 = true;
-				}
+			// 	fprintf(stderr, "(avant) v \n");
+			// 	fprintf(stderr, "(avant)  %.3e  \n", v);
 
-				if (c2 != '-')
-				{
-					had_one_valid_nucleotid_2 = true;
-				}
+			// 	if (c1 != '-')
+			// 	{
+			// 		had_one_valid_nucleotid_1 = true;
+			// 	}
 
-				// begin insertion seq 1
-				if (had_one_valid_nucleotid_1 && (c1 == '-') && !(in_insertion_1) && (c2 != '-'))
-				{
-					in_insertion_1 = true;
-					fprintf(stderr, "in_insertion_1 becomes true \n");
-				}
+			// 	if (c2 != '-')
+			// 	{
+			// 		had_one_valid_nucleotid_2 = true;
+			// 	}
 
-				// end insertion seq 1
-				if ((c1 != '-') && in_insertion_1 && (i < l - 1)) // Count insertion if not at the end, and not if c2 also is a "-"
-				{
-					in_insertion_1 = false;
+			// 	// begin insertion seq 1
+			// 	if (had_one_valid_nucleotid_1 && (c1 == '-') && !(in_insertion_1) && (c2 != '-'))
+			// 	{
+			// 		in_insertion_1 = true;
+			// 	}
 
-					v += 1;
-					fprintf(stderr, "v += 1 \n");
+			// 	// end insertion seq 1
+			// 	if ((c1 != '-') && in_insertion_1 && (i < l - 1)) // Count insertion if not at the end, and not if c2 also is a "-"
+			// 	{
+			// 		in_insertion_1 = false;
+			// 		v += 1;
+			// 	}
 
-					fprintf(stderr, "in_insertion_1 becomes false \n");
-				}
+			// 	// begin insertion seq 2
+			// 	if (had_one_valid_nucleotid_2 && (c2 == '-') && !(in_insertion_2) && (c1 != '-')) // Count insertion if not at the beginning
+			// 	{
+			// 		in_insertion_2 = true;
+			// 	}
 
-				// begin insertion seq 2
-				if (had_one_valid_nucleotid_2 && (c2 == '-') && !(in_insertion_2) && (c1 != '-')) // Count insertion if not at the beginning
-				{
-					in_insertion_2 = true;
-					fprintf(stderr, "in_insertion_2 becomes true \n");
-				}
+			// 	// end insertion seq 2
+			// 	if ((c2 != '-') && in_insertion_2 && (i < l - 1))
+			// 	{
+			// 		in_insertion_2 = false;
+			// 		v += 1;
+			// 	}
 
-				// end insertion seq 2
-				if ((c2 != '-') && in_insertion_2 && (i < l - 1))
-				{
-					in_insertion_2 = false;
-
-					v += 1;
-					fprintf(stderr, "v += 1 \n");
-
-					fprintf(stderr, "in_insertion_2 becomes false \n");
-				}
-
-				fprintf(stderr, "(apres) v \n");
-				fprintf(stderr, "(apres)  %.3e  \n", v);
-
-				v = ((v) / (double)(l - ncor)); // TODO : à remettre !
-			}
-
-			if (isnan(v))
-				v = 1.0;
-			my_mat.dist[a][b] = my_mat.dist[b][a] = v;
+			v = ((v) / (double)(l - ncor)); // TODO : à remettre !
 		}
+
+		if (isnan(v))
+			v = 1.0;
+		my_mat.dist[a][b] = my_mat.dist[b][a] = v;
 	}
+}
 }
 
 /*compute distance according to Jukes Cantor method*/
