@@ -836,47 +836,54 @@ double count_insertions(double v, int l, char *s1, char *s2)
 		c1 = toupper(*(s1 + i));
 		c2 = toupper(*(s2 + i));
 
-		fprintf(stderr, "(avant) v \n");
-		fprintf(stderr, "(avant)  %.3e  \n", v);
+		// fprintf(stderr, "(avant) v \n");
+		// fprintf(stderr, "(avant)  %.3e  \n", v);
 
-		if (c1 != '-')
+		if ((c1 != '-') && !(had_one_valid_nucleotid_1))
 		{
 			had_one_valid_nucleotid_1 = true;
+			// fprintf(stderr, "had_one_valid_nucleotid_1 becomes true \n");
 		}
 
-		if (c2 != '-')
+		if ((c2 != '-') && !(had_one_valid_nucleotid_2))
 		{
 			had_one_valid_nucleotid_2 = true;
+			// fprintf(stderr, "had_one_valid_nucleotid_2 becomes true \n");
 		}
 
 		// begin insertion seq 1
 		if (had_one_valid_nucleotid_1 && (c1 == '-') && !(in_insertion_1) && (c2 != '-'))
 		{
 			in_insertion_1 = true;
+			// fprintf(stderr, "in_insertion_1 becomes true \n");
 		}
 
 		// end insertion seq 1
-		if ((c1 != '-') && in_insertion_1 && (i < l - 1)) // Count insertion if not at the end, and not if c2 also is a "-"
+		if ((c1 != '-') && in_insertion_1) // Count insertion if not at the end, and not if c2 also is a "-"
 		{
 			in_insertion_1 = false;
 			v += 1;
+			// fprintf(stderr, "in_insertion_1 becomes false \n");
 		}
 
 		// begin insertion seq 2
 		if (had_one_valid_nucleotid_2 && (c2 == '-') && !(in_insertion_2) && (c1 != '-')) // Count insertion if not at the beginning
 		{
 			in_insertion_2 = true;
+			// fprintf(stderr, "in_insertion_2 becomes true \n");
 		}
 
 		// end insertion seq 2
-		if ((c2 != '-') && in_insertion_2 && (i < l - 1))
+		if ((c2 != '-') && in_insertion_2)
 		{
 			in_insertion_2 = false;
+			// fprintf(stderr, "in_insertion_2 becomes false \n");
+
 			v += 1;
 		}
-
-		return v;
 	}
+
+	return v;
 }
 
 /*compute a very tricky distance for 2 sequences*/
@@ -920,67 +927,16 @@ void distancesimple(struct FastaSeq *mesSeqs, int l, struct DistanceMatrix my_ma
 				if (((*(s1 + i)) == '-') || ((*(s2 + i)) == '-') || ((*(s1 + i)) == 'N') || ((*(s2 + i)) == 'N'))
 					ncor++;
 			}
-
+			// if...
 			v = count_insertions(v, l, s1, s2);
 
-			// // here : check if any insertions ?
-			// bool in_insertion_1 = false;
-			// bool in_insertion_2 = false;
-			// bool had_one_valid_nucleotid_1 = false;
-			// bool had_one_valid_nucleotid_2 = false;
-
-			// for (i = 0; i < l; i++)
-			// {
-			// 	c1 = toupper(*(s1 + i));
-			// 	c2 = toupper(*(s2 + i));
-
-			// 	fprintf(stderr, "(avant) v \n");
-			// 	fprintf(stderr, "(avant)  %.3e  \n", v);
-
-			// 	if (c1 != '-')
-			// 	{
-			// 		had_one_valid_nucleotid_1 = true;
-			// 	}
-
-			// 	if (c2 != '-')
-			// 	{
-			// 		had_one_valid_nucleotid_2 = true;
-			// 	}
-
-			// 	// begin insertion seq 1
-			// 	if (had_one_valid_nucleotid_1 && (c1 == '-') && !(in_insertion_1) && (c2 != '-'))
-			// 	{
-			// 		in_insertion_1 = true;
-			// 	}
-
-			// 	// end insertion seq 1
-			// 	if ((c1 != '-') && in_insertion_1 && (i < l - 1)) // Count insertion if not at the end, and not if c2 also is a "-"
-			// 	{
-			// 		in_insertion_1 = false;
-			// 		v += 1;
-			// 	}
-
-			// 	// begin insertion seq 2
-			// 	if (had_one_valid_nucleotid_2 && (c2 == '-') && !(in_insertion_2) && (c1 != '-')) // Count insertion if not at the beginning
-			// 	{
-			// 		in_insertion_2 = true;
-			// 	}
-
-			// 	// end insertion seq 2
-			// 	if ((c2 != '-') && in_insertion_2 && (i < l - 1))
-			// 	{
-			// 		in_insertion_2 = false;
-			// 		v += 1;
-			// 	}
-
-			v = ((v) / (double)(l - ncor)); // TODO : à remettre !
+			v = ((v) / (double)(l - ncor));
 		}
 
 		if (isnan(v))
 			v = 1.0;
 		my_mat.dist[a][b] = my_mat.dist[b][a] = v;
 	}
-}
 }
 
 /*compute distance according to Jukes Cantor method*/
@@ -1030,6 +986,8 @@ void distanceJC69(struct FastaSeq *mesSeqs, int l, struct DistanceMatrix mymat, 
 				if (compare_DNA(c1, c2) == 0)
 					v = v + 1;
 			}
+			// if...
+			v = count_insertions(v, l, s1, s2);
 
 			v = (v) / (double)(newl);
 			if (v >= 0.75)
@@ -1042,6 +1000,7 @@ void distanceJC69(struct FastaSeq *mesSeqs, int l, struct DistanceMatrix mymat, 
 		}
 	}
 }
+
 char IsTransition(char nt1, char nt2)
 {
 
