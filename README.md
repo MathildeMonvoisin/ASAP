@@ -12,8 +12,10 @@ run with
 ## Web interface
 ASAP is available on : https://spartexplorer.mnhn.fr/
 
-## Please cite : https://hal.science/hal-03039819/document?utm_source=consensus 
+## Paper
+https://hal.science/hal-03039819/document?utm_source=consensus 
 
+## Compilation
 
 ASAP command line: Brief Install and How to Description
 
