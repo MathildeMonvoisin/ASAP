@@ -989,7 +989,8 @@ void distanceJC69(struct FastaSeq *mesSeqs, int l, struct DistanceMatrix mymat, 
 					v = v + 1;
 			}
 			// if...
-			v = count_insertions(v, l, s1, s2);
+			if (asap_param.gapsdist == 1)
+				v = count_insertions(v, l, s1, s2);
 
 			v = (v) / (double)(newl);
 			if (v >= 0.75)

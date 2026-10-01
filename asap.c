@@ -89,6 +89,7 @@ void usage(char *arg)
 	\t-r #  : nbr of replicates for statistical tests (default is 10^4)\n\
 	\t-b #  : nbr of low-pvalues to be reported (0.001 default)\n\
 	\t-m    : if present the distance Matrix is supposed to be MEGA CVS (other formats than mega are guessed)\n\
+	\t-g    : if present, the gaps will be taken into account when calculating the distance\n\
 	\t-a    : output all files: all probabilities, tree and graph files [Better with -o option]\n\
 	\t-u    : output ONLY spart file\n\
 	\t-d #  : distance (0: Kimura-2P, 1: Jukes-Cantor --default--, 2: Tamura-Nei 3:simple distance)\n\
@@ -698,7 +699,7 @@ int main(int argc, char **argv)
 
 	IndelDistanceMode indel_distance_mode = MODE_BASIC;
 
-	short int imethode = 1, fmeg = 0, withallfiles = 0; // imethode1 for Jukes
+	short int imethode = 1, fmeg = 0, gapsdist = 0, withallfiles = 0; // imethode1 for Jukes
 	int last_node;
 	// int fmeg2=0;
 	float maxDist,
@@ -756,7 +757,7 @@ int main(int argc, char **argv)
 	/*
 		parse options
 	*/
-	while ((c = getopt(argc, argv, "o:l:n:p:w:d:t:amuhr:b:x:")) != -1)
+	while ((c = getopt(argc, argv, "o:l:n:p:w:d:t:amguhr:b:x:")) != -1)
 	{
 
 		switch (c)
@@ -801,7 +802,11 @@ int main(int argc, char **argv)
 			break;
 
 		case 'm':
-			fmeg = 1; /*if present format mega CVS*/
+			fmeg = 1; /*if present format mega CVS */
+			break;
+
+		case 'g':
+			asap_param.gapsdist = 1; /*if present the gaps increase the distance */
 			break;
 
 		case 'M':

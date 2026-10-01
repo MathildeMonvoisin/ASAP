@@ -137,6 +137,7 @@ typedef struct paramet
 char *ledir;
 int lenSeq; 
 int nbpairs;
+int gapsdist; // added for gaps in distance
 int onlyspart;
 int replicates;
 float seuil_pvalue;
