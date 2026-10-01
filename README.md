@@ -8,15 +8,6 @@ run with
 ``` ./asap [location of you fasta file] ``` 
 
 
-
-## Web interface
-ASAP is available on : https://spartexplorer.mnhn.fr/
-
-## Paper
-https://hal.science/hal-03039819/document?utm_source=consensus 
-
-## Compilation
-
 ASAP command line: Brief Install and How to Description
 
 

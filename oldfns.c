@@ -46,6 +46,8 @@
 #include "oldfns.h"
 #include <stdbool.h>
 
+char *strcasestr(const char *haystack, const char *needle);
+
 #define COMMON_SYMBOL 1
 
 /*check if we have at least one common symbol beetween the 2 seqs*/

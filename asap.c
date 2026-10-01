@@ -665,7 +665,7 @@ int main(int argc, char **argv)
 	int i,
 		//		*grp,
 		//	    nb_pairs,
-		nbresults = 0,
+		nbresults = 0, // profondeur ???
 		firstpart,
 		//	    n_best=0,
 		color_ori = 5,
@@ -846,6 +846,7 @@ int main(int argc, char **argv)
 		srand(seed_asap);
 	file_data = argv[optind];
 
+	// allocations
 	if (strrchr(file_data, '/') != NULL)
 	{
 		int len_sim_nam = strrchr(file_data, '/') - file_data;
@@ -1042,19 +1043,17 @@ int main(int argc, char **argv)
 
 	fprintf(stderr, "> asap is building and testing all partitions\n  ");
 
-	// int do_agglutine(DistMat mat, Composante *comp, DistPair *ListDist, Results *scores, Tabcompo *strucompo, int nb_pairs, FILE *f_out,double *best, int *fi, FILE *ff, Node *zenodes, int *list_node, int *lastnode, char *ledir, int lenSeq, int replicates,float seuil_pvalue,float pond_pente)
-
-	// nbresults = do_agglutine( mat, &comp, ListDistance, scores, strucompo, nb_pairs, f_out, &best_score, &firstpart, stderr, zenodes, no_node, &last_node, "", len_seq, replicates,seuil_pvalue,pond_pente);
 	nbresults = do_agglutine(mat, &comp, ListDistance, scores, strucompo, &best_score, &firstpart, zenodes, no_node, &last_node, asap_param);
 
 	fprintf(stderr, "> asap has finished building and testing all partitions\n  ");
-	/*if (fdeb!=NULL)
-	{
-	fprintf(fdeb,"%d res\n",nbresults);
-	for (i=0;i<nbresults;i++)
-		fprintf(fdeb,"%d %d %d\n",i,scores[i].nbspec,scores[i].nbspecRec);
-	fclose (fdeb);
-}*/
+	// if (fdeb != NULL)
+	// {
+	// fprintf(fdeb, "%d res\n", nbresults);
+	for (i = 0; i < nbresults; i++)
+		// fprintf(fdeb, "%d %d %d\n", i, scores[i].nbspec, scores[i].nbspecRec);
+		fprintf(stderr, "%d %d %d\n", i, scores[i].nbspec, scores[i].nbspecRec);
+	// fclose(fdeb);
+	// }
 
 	qsort(scores, nbresults, sizeof(Results), compareProba);
 	for (i = 0; i < nbresults + 1; i++)
@@ -1084,8 +1083,8 @@ int main(int argc, char **argv)
 	if (asap_param.onlyspart == 0)
 		fprintf(file_res_cvs, "Partition rank\tNbSubset\tAsap score\tp-val\tpval-rank\tW\tW rank\tTreshold distance\n");
 	int nb_B = (nbresults < nbBestAsap) ? nbresults : nbBestAsap;
-	for (i = 0; i < nbresults; i++)
 
+	for (i = 0; i < nbresults; i++)
 	{
 		char toStar = ' ';
 		if (scores[i].d_jump >= minAsapDist && scores[i].d_jump <= maxAsapDist)
@@ -1162,7 +1161,6 @@ int main(int argc, char **argv)
 
 	if (asap_param.onlyspart == 0)
 	{
-
 		draw_clado(zenodes, svgout, last_node, mat.n, widthKlado);
 
 		char *fname2;
@@ -1219,6 +1217,7 @@ int main(int argc, char **argv)
 		o_sp[i] = malloc(sizeof(int) * 2);
 	// fprintf(stderr,"go ecrit %d %d\n",nb_B,nbresults);
 
+	// reprendre ici
 	ecrit_fichier_texte(dirfiles, nb_B - 1, nbresults, zenodes, scores, asap_param.fres, asap_param.seuil_pvalue, myspar, mat.n, last_node, simple_name, asap_param.onlyspart);
 
 	// fprintf(stderr,"go order\n");
