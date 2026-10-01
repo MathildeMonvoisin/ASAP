@@ -2,7 +2,7 @@
 
 
 compile with 
-``` gcc -O3  -Wall  -o asap oldfns.c asap.c asap_common.c  asap_core.c gdtosvg.c  draw.c -lm``` 
+``` make ``` 
 
 run with 
 ``` ./asap [location of you fasta file] ``` 
